@@ -18,7 +18,7 @@ class GroupsTestCase(TestCase):
         type_write = GroupType.objects.create(label='write')
         type_admin = GroupType.objects.create(label='admin')
 
-        # Create Node Groups and Attach them to the Node
+        # Create Node Groups
         node_group_1_read = Group.objects.create(name=f'n:{n1.id}:read', group_type=type_read)
         node_group_1_write = Group.objects.create(name=f'n:{n1.id}:write', group_type=type_write)
         node_group_1_admin = Group.objects.create(name=f'n:{n1.id}:admin', group_type=type_admin)
