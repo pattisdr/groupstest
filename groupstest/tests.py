@@ -31,7 +31,7 @@ class GroupsTestCase(TestCase):
         node_group_3_write = Group.objects.create(name=f'n:{n3.id}:write', group_type=type_write)
         node_group_3_admin = Group.objects.create(name=f'n:{n3.id}:admin', group_type=type_admin, parent=node_group_2_admin)
 
-        # Attach Node Groups to Node Objects (w/ implicit upstream view/read)
+        # Attach Node Groups to Node Objects (admins w/ implicit upstream view/read)
         #
         node_group_1_read.assign_object(n1, custom_permissions={'group': ['view']})
         node_group_1_write.assign_object(n1, custom_permissions={'group': ['view', 'change']})
