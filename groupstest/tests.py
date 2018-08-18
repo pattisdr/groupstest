@@ -63,7 +63,7 @@ class GroupsTestCase(TestCase):
         node_group_3_write.add_member(member_3)
         node_group_3_admin.add_member(member_3)
 
-        # Verify Explicit Admin Permission
+        # Verify Explicit Admin Permission (no admin upstream permissions from nested group)
         self.assertFalse(member_3.has_perm('delete_node', n1))
         self.assertFalse(member_3.has_perm('delete_node', n2))
         self.assertTrue(member_3.has_perm('delete_node', n3))
