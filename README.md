@@ -1,4 +1,5 @@
-# groupstest
+# Groups Test
+
 Nested Relationships w/ Django + Django Guardian + Django Groups Manager
 
 ### Setup Environment
@@ -21,3 +22,6 @@ rm -f groupstest/migrations/0001_initial.py && python manage.py reset_db --noinp
 python manage.py test -v 2
 ```
 
+### Example(s)
+
+- [GroupsTestCase](https://github.com/icereval/groupstest/blob/master/groupstest/tests.py)
