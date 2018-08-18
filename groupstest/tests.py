@@ -13,7 +13,7 @@ class GroupsTestCase(TestCase):
         n2 = Node.objects.create(title='Node 2', parent=n1)  # n1 -> n2
         n3 = Node.objects.create(title='Node 3', parent=n2)  # n1 -> n2 -> n3
 
-        # Group Types
+        # Group Types (Optional)
         type_read = GroupType.objects.create(label='read')
         type_write = GroupType.objects.create(label='write')
         type_admin = GroupType.objects.create(label='admin')
