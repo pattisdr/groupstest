@@ -1,6 +1,7 @@
 from django.test import TestCase
-
-from groups_manager.models import Group, GroupType, Member
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Permission
+from groups_manager.models import Group, GroupType, Member, GroupMemberRole
 
 from groupstest.models import Node
 
@@ -141,3 +142,97 @@ class GroupsTestCase(TestCase):
         self.assertTrue(other_admin.has_perm('view_node', n3))
         self.assertFalse(other_admin.has_perm('change_node', n3))
         self.assertFalse(other_admin.has_perm('delete_node', n3))
+
+    def test_osf_groups(self):
+        # Creating Platform team OSF Group
+        osf_platform_managers = Group.objects.create(name='platform_manager')
+        osf_platform_members = Group.objects.create(name='platform_member')
+
+        content_type = ContentType.objects.get_for_model(Group)
+        manage_permission = Permission.objects.create(
+            codename='manage_group',
+            name='Can manage group membership',
+            content_type=content_type
+        )
+
+        # Add manage permissions to the manager group for both the manager and member groups
+        osf_platform_managers.assign_object(osf_platform_managers, custom_permissions={'group': ['manage_group']})
+        osf_platform_managers.assign_object(osf_platform_members, custom_permissions={'group': ['manage_group']})
+
+        # Members
+        casey = Member.objects.create(first_name='Casey')
+        dawn = Member.objects.create(first_name='Dawn')
+        erin = Member.objects.create(first_name='Erin')
+        john = Member.objects.create(first_name='John')
+        steve = Member.objects.create(first_name='Steve')
+
+        # Add platform team members to groups
+        osf_platform_managers.add_member(casey)
+        osf_platform_managers.add_member(steve)
+
+        osf_platform_members.add_member(casey)
+        osf_platform_members.add_member(dawn)
+        osf_platform_members.add_member(erin)
+        osf_platform_members.add_member(john)
+        osf_platform_members.add_member(steve)
+
+        # Casey and Steve can manage both the member and manager groups
+        self.assertTrue(casey.has_perm('manage_group', osf_platform_managers))
+        self.assertTrue(casey.has_perm('manage_group', osf_platform_members))
+        self.assertTrue(steve.has_perm('manage_group', osf_platform_managers))
+        self.assertTrue(steve.has_perm('manage_group', osf_platform_members))
+
+        # Erin, John, and I can't manage the member or manager groups
+        self.assertFalse(dawn.has_perm('manage_group', osf_platform_managers))
+        self.assertFalse(dawn.has_perm('manage_group', osf_platform_members))
+        self.assertFalse(erin.has_perm('manage_group', osf_platform_managers))
+        self.assertFalse(erin.has_perm('manage_group', osf_platform_members))
+        self.assertFalse(john.has_perm('manage_group', osf_platform_managers))
+        self.assertFalse(john.has_perm('manage_group', osf_platform_members))
+
+    def test_osf_groups_resource_assignment_via_group_type_permissions(self):
+        # OSF Group
+        platform_team = Group.objects.create(name='Platform Team')
+
+        # Group member roles
+        manager = GroupMemberRole.objects.create(label='group manager')
+        member = GroupMemberRole.objects.create(label='group member')
+
+        # Members
+        casey = Member.objects.create(first_name='Casey')
+        dawn = Member.objects.create(first_name='Dawn')
+        erin = Member.objects.create(first_name='Erin')
+        john = Member.objects.create(first_name='John')
+        steve = Member.objects.create(first_name='Steve')
+
+        # Add to platform team
+        platform_team.add_member(casey, [manager])
+        platform_team.add_member(steve, [manager])
+        platform_team.add_member(erin, [member])
+        platform_team.add_member(john, [member])
+        platform_team.add_member(dawn, [member])
+
+        # Create manage group permission
+        content_type = ContentType.objects.get_for_model(Group)
+        manage_permission = Permission.objects.create(
+            codename='manage_group',
+            name='Can manage group membership',
+            content_type=content_type
+        )
+
+        custom_permissions = {
+            'owner': {
+                'group-manager': ['manage_group'],
+            }
+        }
+        casey.assign_object(platform_team, platform_team, custom_permissions=custom_permissions)
+        steve.assign_object(platform_team, platform_team, custom_permissions=custom_permissions)
+        dawn.assign_object(platform_team, platform_team, custom_permissions=custom_permissions)
+        erin.assign_object(platform_team, platform_team, custom_permissions=custom_permissions)
+        john.assign_object(platform_team, platform_team, custom_permissions=custom_permissions)
+
+        self.assertTrue(casey.has_perm('manage_group', platform_team))
+        self.assertTrue(steve.has_perm('manage_group', platform_team))
+        self.assertFalse(dawn.has_perm('manage_group', platform_team))
+        self.assertFalse(erin.has_perm('manage_group', platform_team))
+        self.assertFalse(john.has_perm('manage_group', platform_team))
