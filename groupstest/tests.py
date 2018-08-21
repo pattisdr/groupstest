@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, User
 from groups_manager.models import Group, GroupType, Member, GroupMemberRole
 
 from groupstest.models import Node
@@ -225,6 +225,8 @@ class GroupsTestCase(TestCase):
                 'group-manager': ['manage_group'],
             }
         }
+
+        # Looks like for roles you have to assign permission to user instead of group
         casey.assign_object(platform_team, platform_team, custom_permissions=custom_permissions)
         steve.assign_object(platform_team, platform_team, custom_permissions=custom_permissions)
         dawn.assign_object(platform_team, platform_team, custom_permissions=custom_permissions)
@@ -236,3 +238,14 @@ class GroupsTestCase(TestCase):
         self.assertFalse(dawn.has_perm('manage_group', platform_team))
         self.assertFalse(erin.has_perm('manage_group', platform_team))
         self.assertFalse(john.has_perm('manage_group', platform_team))
+
+
+    def test_members_can_link_to_users(self):
+        bob = User.objects.create_user(username='bob', first_name='bob', email='bob@tom.io', password='testpassword')
+        tom = User.objects.create_user(username='tom', first_name='tom', email='tom@bob.io', password='testpassword')
+        # django_user is defined in AUTH_USER_MODEL
+        bob_member = Member.objects.create(django_user=bob)
+        tom_member = Member.objects.create(django_user=tom)
+
+        self.assertTrue(bob_member.django_user_id, bob.id)
+        self.assertTrue(tom_member.django_user_id, tom.id)
